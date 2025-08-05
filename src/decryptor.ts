@@ -1,29 +1,27 @@
 import { createDecipheriv } from "crypto";
 import { inflateSync } from "zlib";
-import { readFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { StreamUtils } from "./stream-utils";
 import { BSIIDecoder } from "./bsii-decoder";
-import {
-  BSIISupportedVersions,
-  DecryptResult,
-  SignatureType,
-  SIIData,
-  SIIHeader,
-} from "./types";
+import { SignatureType, SIIData, SIIDecryptResult, SIIHeader } from "./types";
 
-export class Decryptor {
+export class SIIDecryptor {
   private static readonly SII_KEY = Buffer.from([
     0x2a, 0x5f, 0xcb, 0x17, 0x91, 0xd2, 0x2f, 0xb6, 0x02, 0x45, 0xb3, 0xd8,
     0x36, 0x9e, 0xd0, 0xb2, 0xc2, 0x73, 0x71, 0x56, 0x3f, 0xbf, 0x1f, 0x3c,
     0x9e, 0xdf, 0x6b, 0x11, 0x82, 0x5a, 0x5d, 0x0a,
   ]);
 
-  static decrypt(filePath: string, decode: boolean = true): DecryptResult {
-    const result: DecryptResult = {
+  static decrypt(filePath: string, decode: boolean = true): SIIDecryptResult {
+    const result: SIIDecryptResult = {
       data: Buffer.alloc(0),
       success: false,
       type: "plain",
     };
+
+    if (existsSync(filePath) === false) {
+      throw new Error(`File does not exist: ${filePath}`);
+    }
 
     const bytes = readFileSync(filePath);
     const streamPos = { value: 0 };
@@ -78,6 +76,10 @@ export class Decryptor {
         case SignatureType._3nK:
           throw new Error("_3nK decoding is not implemented yet.");
       }
+    }
+
+    if (result.success && result.data && result.data.length > 0) {
+      result.string_content = result.data.toString("utf8");
     }
 
     return result;

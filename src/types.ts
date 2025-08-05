@@ -149,8 +149,9 @@ export enum BSIISupportedVersions {
   Version3 = 3,
 }
 
-export type DecryptResult = {
+export type SIIDecryptResult = {
   data: Buffer;
+  string_content?: string;
   success: boolean;
   type: "plain" | "encrypted" | "binary" | "3nK";
   error?: string;
@@ -161,7 +162,7 @@ export type DecryptResult = {
   }
 };
 
-export type DecodeResult = {
+export type SIIDecodeResult = {
   data: Buffer;
   header?: BSIIHeader;
   success: boolean;

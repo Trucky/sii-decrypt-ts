@@ -1,6 +1,17 @@
 # SII Decrypt TypeScript
 
-A modern TypeScript library for decrypting and decoding SCS Software save game files (SII) from American Truck Simulator and Euro Truck Simulator 2.
+A modern TypeScript library for decrypting and decoding SCS Software game save files (SII format) from American Truck Simulator and Euro Truck Simulator 2.
+
+## Features
+
+- ✅ **Decrypt encrypted SII files** using AES-256-CBC encryption
+- ✅ **Decompress zlib-compressed data** automatically  
+- ✅ **Decode binary format SII files** (BSII) with structure parsing
+- ✅ **Support for 39 different data types** (strings, vectors, arrays, etc.)
+- ✅ **Multiple format versions** (Binary format versions 1, 2, and 3)
+- ✅ **Full TypeScript support** with comprehensive type definitions
+- ✅ **Zero external dependencies** - uses Node.js native crypto and zlib
+- ✅ **Detailed metadata** in results including format type and encryption status
 
 ## Installation
 
@@ -11,65 +22,168 @@ npm install sii-decrypt-ts
 ## Quick Start
 
 ```typescript
-import { Decryptor } from "sii-decrypt-ts";
-import * as fs from "fs";
+import { SIIDecryptor } from "sii-decrypt-ts";
 
 // Decrypt and decode an SII file
-const decodedData = Decryptor.decrypt("./save_game.sii", true);
+const result = SIIDecryptor.decrypt("./save_game.sii", true);
 
-// Save the result
-fs.writeFileSync("./decoded_save_game.sii", decodedData);
+if (result.success) {
+    console.log(`File type: ${result.type}`);
+    console.log(`Was encrypted: ${result.encrypted || false}`);
+    
+    // Access the decoded text content
+    console.log(result.string_content);
+    
+    // Or work with the buffer directly
+    const textData = result.data.toString();
+}
 ```
 
-## Features
+## Supported File Formats
 
-- ✅ Decrypt encrypted SII files using AES-256-CBC
-- ✅ Decompress zlib-compressed data
-- ✅ Decode binary format SII files
-- ✅ Support for all SII data types (strings, vectors, arrays, etc.)
-- ✅ Full TypeScript support with type definitions
-- ✅ Node.js native crypto and zlib (no external dependencies)
+The library automatically detects and handles multiple SII file formats:
 
-## Supported File Types
-
-- **Encrypted SII files** - Game save files that are encrypted and compressed
-- **Binary SII files** - Unencrypted but binary-encoded save files
-- **Plain text SII files** - Human-readable save files
+| Format | Signature | Description |
+|--------|-----------|-------------|
+| **Plain Text** | `SiiS` (0x53696953) | Unencrypted, human-readable text format |
+| **Encrypted** | `SrcC` (0x43727953) | AES-256-CBC encrypted + zlib compressed |
+| **Binary** | `SIIB` (0x42494953) | Binary format with structured data blocks |
+| **3nK** | `3nK` (0x014B6E33) | Reserved format (not yet implemented) |
 
 ## API Reference
 
-### Decryptor.decrypt(filePath: string, decode?: boolean): Buffer
+### SIIDecryptor.decrypt(filePath: string, decode?: boolean): SIIDecryptResult
 
 Main function to decrypt and decode SII files.
 
 **Parameters:**
+- `filePath` (string): Path to the SII file
+- `decode` (boolean, optional): Whether to decode binary data to text format (default: true)
 
-- `filePath`: Path to the SII file
-- `decode`: Whether to decode the binary data (default: true)
+**Returns:** `SIIDecryptResult` object with the following properties:
+- `success` (boolean): Whether the operation succeeded
+- `data` (Buffer): The processed file data
+- `string_content` (string, optional): Text content when decode=true and successful
+- `type` ("plain" | "encrypted" | "binary" | "3nK"): Detected file format
+- `encrypted` (boolean, optional): Whether the file was encrypted
+- `binaryFormatInfo` (object, optional): Additional info for binary format files
+- `error` (string, optional): Error message if operation failed
 
-**Returns:** Buffer containing the decoded SII data as UTF-8 text
+**Example:**
+```typescript
+import { SIIDecryptor } from "sii-decrypt-ts";
 
-## Data Types Supported
+const result = SIIDecryptor.decrypt("game.sii", true);
 
-The library supports all SII data types including:
+if (result.success) {
+    // Work with the result
+    console.log(result.string_content);
+} else {
+    console.error("Failed to decrypt:", result.error);
+}
+```
 
-- UTF-8 strings and string arrays
-- Encoded strings (base-38 encoding)
-- Single precision floats and float arrays
-- Integer types (16-bit, 32-bit, 64-bit)
-- Boolean arrays
-- Vector types (2D, 3D, 4D, 7D, 8D)
-- Complex ID types
-- Ordinal string lists
+### Advanced Usage
+
+```typescript
+import { 
+    SIIDecryptor, 
+    BSIIDecoder, 
+    BSIITypeDecoder,
+    SignatureType 
+} from "sii-decrypt-ts";
+
+// Direct binary format decoding
+const binaryData = /* your Buffer data */;
+if (binaryData.readUInt32LE(0) === SignatureType.Binary) {
+    const decoded = BSIIDecoder.decode(binaryData);
+    console.log("Binary format version:", decoded.header?.version);
+}
+
+// Low-level type decoding
+const offset = { value: 0 };
+const stringValue = BSIITypeDecoder.decodeUTF8String(binaryData, offset);
+```
+
+## Supported Data Types
+
+The library supports all 39 SII data types used by the games:
+
+### Basic Types
+- **UTF-8 Strings** (0x01) - Text data, file paths, names
+- **Encoded Strings** (0x03) - Base-38 encoded identifiers  
+- **Floats** (0x05) - 32-bit IEEE 754 floating point
+- **Booleans** (0x35) - True/false values
+- **Integers** - 16-bit (0x29, 0x2B), 32-bit (0x25, 0x27), 64-bit (0x31, 0x33)
+
+### Vector Types
+- **Vector2** (0x07) - 2D coordinates, UV mapping
+- **Vector3** (0x09) - 3D positions, rotations, colors
+- **Vector4** (0x17) - Quaternions, RGBA colors
+- **Vector8** (0x19) - Enhanced position data with bias compensation
+- **Int32 Vector3** (0x11) - Discrete 3D coordinates
+
+### Array Types
+- Arrays of all basic types (0x02, 0x04, 0x06, etc.)
+- Vector arrays (0x08, 0x0A, 0x12, 0x18, 0x1A)
+- Specialized arrays for different data formats
+
+### Complex Types
+- **ID References** (0x39, 0x3B, 0x3D) - Object identifiers and references
+- **Ordinal Strings** (0x37) - String table references for optimization
+
+For complete details, see [DOCS.md](./DOCS.md).
+
+## Binary Format Versions
+
+The library supports multiple versions of the binary SII format:
+
+- **Version 1**: Basic binary format with essential data types
+- **Version 2**: Enhanced vector support and improved precision  
+- **Version 3**: Additional data types and optimizations
+
+Version differences are handled automatically, with backward compatibility maintained.
+
+## Error Handling
+
+The library provides comprehensive error handling:
+
+```typescript
+try {
+    const result = SIIDecryptor.decrypt("game.sii", true);
+    
+    if (!result.success) {
+        console.error("Decryption failed:", result.error);
+        return;
+    }
+    
+    // Process successful result
+    console.log("Decrypted successfully!");
+    
+} catch (error) {
+    // Handle file system errors, invalid formats, etc.
+    console.error("Exception:", error.message);
+}
+```
+
+## Documentation
+
+For detailed technical documentation, including:
+- Complete data type reference
+- Binary format specifications  
+- Encryption/decryption process details
+- Advanced usage examples
+
+See [DOCS.md](./DOCS.md)
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT License - See [LICENSE](./LICENSE) file for details.
 
 ## Contributing
 
-Contributions are welcome! Please read the contributing guidelines before submitting PRs.
+Contributions are welcome! Please read the contributing guidelines before submitting pull requests.
 
 ## Credits
 
-This TypeScript port is based on the original C# SIIDecryptSharp library.
+This TypeScript library is based on reverse engineering of the SII file format used by SCS Software games.

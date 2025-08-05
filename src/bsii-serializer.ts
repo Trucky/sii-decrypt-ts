@@ -88,7 +88,14 @@ export class BSIISerializer {
 
       for (const segment of block.segments) {
         if (segment.type !== 0) {
+          /*if (segment.name == 'license_plate')
+          {
+            console.log("Serializing segment:", segment.name, "Type:", segment.type);
+          }*/
+
           const newText = this.serializeSegment(segment, data.header.version);
+
+          if (newText.includes("20169.600")) console.warn(segment);
 
           result += newText;
         }
@@ -204,8 +211,7 @@ export class BSIISerializer {
     const value = segment.value as string;
     let output = ` ${segment.name}: `;
 
-    /*
-    if (!isNaN(parseInt(value))) {
+    if (/^-?\d+$/.test(value)) {
       output += value;
     } else if (!value) {
       output += '""';
@@ -216,9 +222,8 @@ export class BSIISerializer {
     } else {
       output += `"${value}"`;
     }
-      */
 
-    output += `"${value}"`;
+    //output += `"${value}"`;
 
     return output + "\n";
   }
@@ -387,12 +392,10 @@ export class BSIISerializer {
     const value = segment.value as string[];
     let result = `${indent}${segment.name}: ${value.length}\n`;
     for (let i = 0; i < value.length; i++) {
-      if (!isNaN(parseInt(value[i]))) {
+      if (/^\d+$/.test(value[i])) {
         result += `${indent}${segment.name}[${i}]: ${value[i]}\n`;
       } else if (!value[i]) {
         result += `${indent}${segment.name}[${i}]: ""\n`;
-      } else if (value[i].includes(" ") || value[i].includes(".")) {
-        result += `${indent}${segment.name}[${i}]: "${value[i]}"\n`;
       } else if (this.isLimitedAlphabet(value[i])) {
         result += `${indent}${segment.name}[${i}]: ${value[i]}\n`;
       } else {

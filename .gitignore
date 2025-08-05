@@ -35,4 +35,5 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
 /dist
-/data
+/data/**
+!.gitkeep

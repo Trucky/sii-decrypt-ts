@@ -1,6 +1,4 @@
-import { Decryptor } from './decryptor';
-
-export { Decryptor } from './decryptor';
+export { SIIDecryptor } from './decryptor';
 export { BSIIDecoder } from './bsii-decoder';
 export { BSIISerializer } from './bsii-serializer'; 
 export { BSIITypeDecoder } from './decoder-utils';

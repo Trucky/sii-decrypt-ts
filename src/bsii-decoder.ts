@@ -6,12 +6,12 @@ import {
   BSIIStructureBlock,
   BSIISupportedVersions,
   DataTypeIdFormat,
-  DecodeResult,
+  SIIDecodeResult,
 } from "./types";
 
 export class BSIIDecoder {
-  static decode(bytes: Buffer): DecodeResult {
-    const result: DecodeResult = {
+  static decode(bytes: Buffer): SIIDecodeResult {
+    const result: SIIDecodeResult = {
       data: Buffer.alloc(0),
       success: false,
     };
