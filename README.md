@@ -186,4 +186,6 @@ Contributions are welcome! Please read the contributing guidelines before submit
 
 ## Credits
 
-This TypeScript library is based on reverse engineering of the SII file format used by SCS Software games.
+This TypeScript library is inspired by the excellent work done on [SII_Decrypt](https://github.com/TheLazyTomcat/SII_Decrypt) by TheLazyTomcat and [SII-DecryptSharp](https://gitlab.com/jammerxd/sii-decryptsharp) by jammerxd. These original projects provided invaluable insights into the SII file format structure and decryption methods used by SCS Software games.
+
+Special thanks to both TheLazyTomcat and jammerxd for their thorough reverse engineering work that made this TypeScript port possible.
