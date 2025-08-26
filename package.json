@@ -1,7 +1,7 @@
 {
-  "name": "sii-decrypt-ts",
+  "name": "@trucky/sii-decrypt-ts",
   "version": "1.0.0",
-  "description": "A TypeScript library for decrypting and decoding SCS Software save game files (SII)",
+  "description": "A TypeScript library for decrypting and decoding SCS Software save game files (SII) for Euro Truck Simulator 2 and American Truck Simulator.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -16,6 +16,7 @@
     "euro-truck-simulator-2",
     "scs-software",
     "sii",
+    "save-editing",
     "decryption",
     "typescript",
     "nodejs"
@@ -40,10 +41,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "your-repo-url"
+    "url": "https://github.com/Trucky/sii-decrypt-ts"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.0.0"
   },
   "directories": {
     "example": "examples",
